@@ -1,0 +1,38 @@
+---
+- name: Run health check script
+  hosts: all
+  gather_facts: false
+
+  vars:
+    script_path: /home/santhosh/health_check1.sh
+
+  tasks:
+    - name: Check the script exists
+      ansible.builtin.stat:
+        path: "{{ script_path }}"
+      register: script_stat
+
+    - name: Stop if the script is missing
+      ansible.builtin.assert:
+        that: script_stat.stat.exists
+        fail_msg: "{{ script_path }} not found on {{ inventory_hostname }}"
+
+    - name: Execute health check script
+      ansible.builtin.command: "bash {{ script_path }}"
+      register: hc
+      changed_when: false
+      failed_when: false          # we report the failure ourselves, after printing output
+
+    - name: Show script output
+      ansible.builtin.debug:
+        msg: "{{ hc.stdout_lines }}"
+
+    - name: Show script errors (stderr)
+      ansible.builtin.debug:
+        msg: "{{ hc.stderr_lines }}"
+      when: hc.stderr_lines | length > 0
+
+    - name: Fail the task if the script returned non-zero
+      ansible.builtin.fail:
+        msg: "health_check1.sh exited with code {{ hc.rc }}"
+      when: hc.rc != 0
