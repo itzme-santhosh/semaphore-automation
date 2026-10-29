@@ -21,7 +21,7 @@
       ansible.builtin.command: "bash {{ script_path }}"
       register: hc
       changed_when: false
-      failed_when: false          # we report the failure ourselves, after printing output
+      failed_when: false   
 
     - name: Show script output
       ansible.builtin.debug:
